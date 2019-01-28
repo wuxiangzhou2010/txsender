@@ -7,12 +7,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
 	"github.com/comatrix/go-comatrix/core/types"
 	"github.com/comatrix/go-comatrix/ethclient"
+	"github.com/golang/glog"
 )
 
 func main() {
@@ -27,16 +27,16 @@ func main() {
 	// flag.StringVar(&rpcEndPoint, "ip", "http://13.228.196.190:8546", "rpc endpoint")
 
 	flag.Parse()
-	fmt.Println("flags: rate ", *txsPerRound, "silent ", *silent, "ip ", rpcEndPoint)
+	fmt.Println("flags: rate ", *txsPerRound, "silent ", *silent, "rpc endpoint ", rpcEndPoint)
 
 	conn, err := ethclient.Dial(rpcEndPoint)
 	ctx := context.Background()
 	if err != nil {
-		log.Fatal("Whoops something went wrong!", err)
+		glog.Fatal("Whoops something went wrong!", err)
 	}
 
 	sender.InitSender(*chainAmount)
-	sender.UpdateNonce(conn, ctx)
+	sender.UpdateNonce(ctx, conn)
 
 	value := big.NewInt(100)            // in wei (1 eth)
 	gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
@@ -71,7 +71,7 @@ func main() {
 				err = conn.SendTransaction(context.Background(), signedTx)
 				if err != nil {
 					fmt.Println("   from ", from.Hex(), "to ", to.Hex())
-					log.Fatal("SendTransaction error ", err)
+					glog.Fatal("SendTransaction error ", err)
 
 				}
 				if !*silent {

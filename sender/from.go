@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
+
+	"io/ioutil"
 
 	"github.com/comatrix/go-comatrix/accounts"
 	"github.com/comatrix/go-comatrix/accounts/keystore"
 	"github.com/comatrix/go-comatrix/ethclient"
-	"io/ioutil"
-	"log"
+	"github.com/golang/glog"
 )
 
 var keypaths = []string{
@@ -19,6 +22,7 @@ var keypaths = []string{
 	"./keystore/UTC--2019-01-11T09-45-22.450285600Z--000b45d515b6a0098787571eb407caf8ff7a670a",
 }
 
+// Acc is an accout that with keystore
 type Acc struct {
 	Ks      *keystore.KeyStore
 	Account accounts.Account
@@ -28,6 +32,7 @@ type Acc struct {
 var senderAccounts []*Acc
 var chainAmount int
 
+// GetSender get one account from account array
 func GetSender() *Acc {
 	if senderAccounts == nil {
 		panic("GetSender nil senderAccounts ")
@@ -51,13 +56,13 @@ func getAccountFromPath(filePath []string) []*Acc {
 		ks := keystore.NewKeyStore("./tmp", keystore.StandardScryptN, keystore.StandardScryptP)
 		jsonBytes, err := ioutil.ReadFile(path)
 		if err != nil {
-			log.Fatal(err)
+			glog.Fatal(err)
 		}
 
 		password := "123"
 		account, err := ks.Import(jsonBytes, password, password)
 		if err != nil {
-			log.Fatal(err)
+			glog.Fatal(err)
 		}
 
 		ks.Unlock(account, "123")
@@ -72,7 +77,8 @@ func getAccountFromPath(filePath []string) []*Acc {
 
 }
 
-func UpdateNonce(conn *ethclient.Client, ctx context.Context) {
+// UpdateNonce update the nonce of accounts
+func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 	if senderAccounts == nil {
 		panic("nil sender")
 	}
@@ -88,7 +94,24 @@ func UpdateNonce(conn *ethclient.Client, ctx context.Context) {
 	fmt.Println("Get Nonce ok")
 }
 
+// InitSender init the sender
 func InitSender(amount int) {
 	chainAmount = amount
+
+	path := getPath()
+	keypaths := readKeystore(path)
+
 	senderAccounts = getAccountFromPath(keypaths)
+}
+
+func getPath() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		glog.Fatal(err)
+	}
+
+	keystoreDir := filepath.Join(dir, "keystore")
+
+	fmt.Println("current dir ", dir, "keystore dir ", keystoreDir)
+	return keystoreDir
 }
