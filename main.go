@@ -38,21 +38,27 @@ func main() {
 	sender.InitSender(*chainAmount)
 	sender.UpdateNonce(ctx, conn)
 
-	value := big.NewInt(100)            // in wei (1 eth)
-	gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
-	gasLimit := uint64(21000)           // in units
-
 	var total int
+
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 
+	// update tx sent periodically
 	ticker1 := time.NewTicker(10 * time.Second)
 	defer ticker1.Stop()
 
+	// channel to buffer txs
+	ch := make(chan *types.Transaction, 100)
+
+	go sendTx(ctx, conn, ch)
 	fmt.Println("Start to send transactions...")
 	for {
 		select {
 		case <-ticker.C:
+
+			value := big.NewInt(100)            // in wei (1 eth)
+			gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
+			gasLimit := uint64(21000)           // in units
 			//get one account
 			account := sender.GetSender()
 			//fmt.Printf("select account %#v", account.Account.Address.Hex())
@@ -67,23 +73,13 @@ func main() {
 				if err != nil {
 					fmt.Println("signtx error", err)
 				}
+				ch <- signedTx
 
-				err = conn.SendTransaction(context.Background(), signedTx)
-				if err != nil {
-					fmt.Println("   from ", from.Hex(), "to ", to.Hex())
-					glog.Fatal("SendTransaction error ", err)
-
-				}
-				if !*silent {
-					fmt.Printf("tx sent: %s %v\n", signedTx.Hash().Hex(), signedTx.Nonce())
-
-				}
 				account.Nonce = account.Nonce + 1
 			}
 			total += *txsPerRound / 10
 			if !*silent {
-				fmt.Print("total tx sent ", total)
-				fmt.Println("   from ", from.Hex(), "to ", to.Hex())
+				fmt.Println(" generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", *txsPerRound/10)
 			}
 		case <-ticker1.C:
 
@@ -91,4 +87,16 @@ func main() {
 
 		}
 	}
+}
+
+func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
+
+	for signedTx := range txsCh {
+		err := conn.SendTransaction(ctx, signedTx)
+		if err != nil {
+			// fmt.Println("   from ", from.Hex(), "to ", to.Hex())
+			glog.Fatal("SendTransaction error ", err)
+		}
+	}
+
 }
