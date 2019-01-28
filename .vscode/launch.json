@@ -11,7 +11,9 @@
             "mode": "debug",
             "program": "${workspaceFolder}",
             "env": {},
-            "args": []
+            "args": [
+                "--rate=100"
+            ]
         },
         {
             "name": "Launch",
