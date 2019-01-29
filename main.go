@@ -48,7 +48,7 @@ func main() {
 	defer ticker1.Stop()
 
 	// channel to buffer txs
-	ch := make(chan *types.Transaction, 100)
+	ch := make(chan *types.Transaction, 500)
 
 	go sendTx(ctx, conn, ch)
 	fmt.Println("Start to send transactions...")
@@ -59,9 +59,10 @@ func main() {
 			value := big.NewInt(100)            // in wei (1 eth)
 			gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
 			gasLimit := uint64(21000)           // in units
+
 			//get one account
 			account := sender.GetSender()
-			//fmt.Printf("select account %#v", account.Account.Address.Hex())
+
 			from := account.Account.Address
 			to := recipient.GetRecipient()
 
@@ -90,11 +91,15 @@ func main() {
 }
 
 func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
+	for i := 0; i < 4; i++ {
+		go txworker(ctx, conn, txsCh)
+	}
+}
 
+func txworker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
 		if err != nil {
-			// fmt.Println("   from ", from.Hex(), "to ", to.Hex())
 			glog.Fatal("SendTransaction error ", err)
 		}
 	}
