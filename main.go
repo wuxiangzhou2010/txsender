@@ -1,41 +1,39 @@
 package main
 
 import (
+	"./config"
 	"./recipient"
 	"./sender"
 
 	"context"
-	"flag"
 	"fmt"
+	"log"
 	"math/big"
 	"time"
 
 	"github.com/comatrix/go-comatrix/core/types"
 	"github.com/comatrix/go-comatrix/ethclient"
-	"github.com/golang/glog"
 )
 
 func main() {
 
-	// parse flag
-	txsPerRound := flag.Int("rate", 300, "txs per second")
-	chainAmount := flag.Int("amount", 1, "chain amount")
-	silent := flag.Bool("silent", true, "keep silent")
+	var cfg *config.Config
+	cfg = config.GetConfig("./config.json")
 
-	var rpcEndPoint string
-	flag.StringVar(&rpcEndPoint, "ip", "http://3.0.218.180:8546", "rpc endpoint")
-	// flag.StringVar(&rpcEndPoint, "ip", "http://13.228.196.190:8546", "rpc endpoint")
-
-	flag.Parse()
-	fmt.Println("flags: rate ", *txsPerRound, "silent ", *silent, "rpc endpoint ", rpcEndPoint)
+	txsPerRound := cfg.Rate
+	chainAmount := cfg.ChainAmount
+	silent := cfg.Silent
+	endpoints := cfg.Endpoints
+	workerSize := cfg.Worker
+	rpcEndPoint := endpoints[0]
 
 	conn, err := ethclient.Dial(rpcEndPoint)
 	ctx := context.Background()
 	if err != nil {
-		glog.Fatal("Whoops something went wrong!", err)
+		log.Fatal("Whoops something went wrong!", err)
 	}
 
-	sender.InitSender(*chainAmount)
+	sender.InitSender(chainAmount)
 	sender.UpdateNonce(ctx, conn)
 
 	var total int
@@ -48,9 +46,9 @@ func main() {
 	defer ticker1.Stop()
 
 	// channel to buffer txs
-	ch := make(chan *types.Transaction, 500)
+	ch := make(chan *types.Transaction, cfg.TxBuffer)
 
-	go sendTx(ctx, conn, ch)
+	go sendTx(ctx, conn, ch, workerSize)
 	fmt.Println("Start to send transactions...")
 	for {
 		select {
@@ -65,22 +63,21 @@ func main() {
 
 			from := account.Account.Address
 			to := recipient.GetRecipient()
-
-			for i := 0; i < *txsPerRound/10; i++ {
+			for i := 0; i < txsPerRound/10; i++ {
 
 				tx := types.NewTransaction(account.Nonce, from, to, value, gasLimit, gasPrice, nil, 0)
 
 				signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
 				if err != nil {
-					fmt.Println("signtx error", err)
+					fmt.Println("signtx error", err, account.Account.Address.Hex())
 				}
 				ch <- signedTx
 
 				account.Nonce = account.Nonce + 1
 			}
-			total += *txsPerRound / 10
-			if !*silent {
-				fmt.Println(" generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", *txsPerRound/10)
+			total += txsPerRound / 10
+			if !silent {
+				fmt.Println(" generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", txsPerRound/10)
 			}
 		case <-ticker1.C:
 
@@ -90,8 +87,8 @@ func main() {
 	}
 }
 
-func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
-	for i := 0; i < 4; i++ {
+func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, workerSize int) {
+	for i := 0; i < workerSize; i++ {
 		go txworker(ctx, conn, txsCh)
 	}
 }
@@ -100,7 +97,7 @@ func txworker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
 		if err != nil {
-			glog.Fatal("SendTransaction error ", err)
+			log.Fatal("SendTransaction error ", err, signedTx)
 		}
 	}
 

@@ -2,15 +2,14 @@ package sender
 
 import (
 	"io/ioutil"
-
-	"github.com/golang/glog"
+	"log"
 )
 
 func readKeystore(path string) []string {
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		glog.Fatal(err)
+		log.Fatal(err)
 	}
 
 	var result []string
@@ -18,7 +17,7 @@ func readKeystore(path string) []string {
 		result = append(result, "./keystore/"+f.Name())
 
 	}
-	glog.Info("result ", result)
+	// log.Println("result ", result)
 
 	return result
 }

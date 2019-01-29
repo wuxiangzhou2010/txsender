@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestSum(t *testing.T) {
+func TestReadKeystore(t *testing.T) {
 	path := "../keystore"
 	readKeystore(path)
 }

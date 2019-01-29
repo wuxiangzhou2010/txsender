@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -11,7 +12,6 @@ import (
 	"github.com/comatrix/go-comatrix/accounts"
 	"github.com/comatrix/go-comatrix/accounts/keystore"
 	"github.com/comatrix/go-comatrix/ethclient"
-	"github.com/golang/glog"
 )
 
 // Acc is an accout that with keystore
@@ -29,7 +29,8 @@ func GetSender() *Acc {
 	if senderAccounts == nil {
 		panic("GetSender nil senderAccounts ")
 	}
-	return senderAccounts[rand.Intn(chainAmount)]
+
+	return senderAccounts[rand.Intn(len(senderAccounts))]
 }
 
 func (aa *Acc) String() string {
@@ -45,13 +46,13 @@ func getAccountFromPath(filePath []string) []*Acc {
 		ks := keystore.NewKeyStore("./tmp", keystore.StandardScryptN, keystore.StandardScryptP)
 		jsonBytes, err := ioutil.ReadFile(path)
 		if err != nil {
-			glog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		password := "123"
 		account, err := ks.Import(jsonBytes, password, password)
 		if err != nil {
-			glog.Fatal(err)
+			log.Fatal(err)
 		}
 
 		ks.Unlock(account, "123")
@@ -77,8 +78,9 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 			panic("err")
 		}
 		v.Nonce = nonce
+		log.Println("Get Nonce ok", v.Account.Address.Hex(), "  ", v.Nonce)
 	}
-	fmt.Println("Get Nonce ok")
+
 }
 
 // InitSender init the sender
@@ -94,7 +96,7 @@ func InitSender(amount int) {
 func getPath() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		glog.Fatal(err)
+		log.Fatal(err)
 	}
 
 	keystoreDir := filepath.Join(dir, "keystore")
