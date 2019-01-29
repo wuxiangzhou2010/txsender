@@ -14,13 +14,6 @@ import (
 	"github.com/golang/glog"
 )
 
-var keypaths = []string{
-	"./keystore/UTC--2018-11-05T07-13-33.829662100Z--5c2f960a954be76c71b890287463ec81be020e43",
-	"./keystore/UTC--2018-11-05T07-14-20.837583500Z--9246eebcc9e71e5f69ca48c9fd1f39a5fd9ad3e8",
-	"./keystore/UTC--2019-01-11T09-44-43.418478500Z--80371043454fd85c609860a8545f9456e6caef9d",
-	"./keystore/UTC--2019-01-11T09-45-22.450285600Z--000b45d515b6a0098787571eb407caf8ff7a670a",
-}
-
 // Acc is an accout that with keystore
 type Acc struct {
 	Ks      *keystore.KeyStore
@@ -36,9 +29,6 @@ func GetSender() *Acc {
 	if senderAccounts == nil {
 		panic("GetSender nil senderAccounts ")
 	}
-	//if chainAmount == 2 {
-	//	chainAmount = 1
-	//}
 	return senderAccounts[rand.Intn(chainAmount)]
 }
 
