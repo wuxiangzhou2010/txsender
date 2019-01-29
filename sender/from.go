@@ -3,11 +3,10 @@ package sender
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
-
-	"io/ioutil"
 
 	"github.com/comatrix/go-comatrix/accounts"
 	"github.com/comatrix/go-comatrix/accounts/keystore"
@@ -67,12 +66,11 @@ func getAccountFromPath(filePath []string) []*Acc {
 
 		ks.Unlock(account, "123")
 
-		//fmt.Println("path ", filePath)
 		fmt.Println("imported ", "0x"+path[48:])
 		result = append(result, &Acc{Ks: ks, Account: account})
 
 	}
-	//fmt.Printf("\n\n%+v\n", result)
+
 	return result
 
 }
@@ -90,7 +88,6 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 		}
 		v.Nonce = nonce
 	}
-	//fmt.Printf("accounts with Nonce %+v", senderAccounts)
 	fmt.Println("Get Nonce ok")
 }
 

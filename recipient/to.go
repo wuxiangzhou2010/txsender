@@ -1,9 +1,10 @@
 package recipient
 
 import (
+	"math/rand"
+
 	"github.com/comatrix/go-comatrix/common"
 	"github.com/comatrix/go-comatrix/crypto"
-	"math/rand"
 )
 
 const recipientAmount = 1000
@@ -35,6 +36,7 @@ func initTo() {
 	generateAddress()
 }
 
+// GetRecipient get one recipient
 func GetRecipient() common.Address {
 	if recipients == nil {
 		initTo()
@@ -55,12 +57,7 @@ func generateAddress() {
 
 		// Get the address
 		address := crypto.PubkeyToAddress(key.PublicKey)
-		// 0x8ee3333cDE801ceE9471ADf23370c48b011f82a6
 
 		recipients = append(recipients, address)
-
-		// Get the private key
-		//privateKey := hex.EncodeToString(key.D.Bytes())
-		// 05b14254a1d0c77a49eae3bdf080f926a2df17d8e2ebdf7af941ea001481e57f
 	}
 }
