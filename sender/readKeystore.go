@@ -16,7 +16,6 @@ func readKeystore(path string) []string {
 	var result []string
 	for _, f := range files {
 		result = append(result, "./keystore/"+f.Name())
-		// fmt.Println(f.Name())
 
 	}
 	glog.Info("result ", result)
