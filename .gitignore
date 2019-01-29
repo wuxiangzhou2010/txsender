@@ -2,3 +2,5 @@
 tmp
 debug
 tx_sender
+tx_sender
+./keystore/*
