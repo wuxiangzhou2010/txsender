@@ -10,15 +10,12 @@ import (
 	"github.com/comatrix/go-comatrix/ethclient"
 )
 
-func TestMain(t *testing.T) {
+func TestInit(t *testing.T) {
 	var cfg *config.Config
-	cfg = config.GetConfig("./config.json")
+	cfg = config.GetConfig()
 
-	// txsPerRound := cfg.Rate
-	chainAmount := cfg.ChainAmount
-	// silent := cfg.Silent
 	endpoints := cfg.Endpoints
-	// workerSize := cfg.Worker
+
 	rpcEndPoint := endpoints[0]
 
 	conn, err := ethclient.Dial(rpcEndPoint)
@@ -26,7 +23,7 @@ func TestMain(t *testing.T) {
 	if err != nil {
 		log.Fatal("Whoops something went wrong!", err)
 	}
-
-	sender.InitSender(chainAmount)
+	senderOkCh := make(chan struct{})
+	sender.InitSender(senderOkCh)
 	sender.UpdateNonce(ctx, conn)
 }

@@ -11,14 +11,14 @@ const recipientAmount = 1000
 
 var recipients []common.Address
 
-func toAddress(strings []string) []common.Address {
-	var result []common.Address
-
-	for _, v := range strings {
-		result = append(result, common.HexToAddress(v))
-	}
-	return result
-}
+//func toAddress(strings []string) []common.Address {
+//	var result []common.Address
+//
+//	for _, v := range strings {
+//		result = append(result, common.HexToAddress(v))
+//	}
+//	return result
+//}
 
 func initTo() {
 	//from generated address

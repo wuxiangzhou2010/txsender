@@ -17,7 +17,7 @@ func readKeystore(path string) []string {
 		result = append(result, "./keystore/"+f.Name())
 
 	}
-	// log.Println("result ", result)
+	//log.Println("readKeystore result ", result)
 
 	return result
 }

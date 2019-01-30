@@ -5,5 +5,6 @@ import (
 )
 
 func TestInitSender(t *testing.T) {
-	InitSender(2)
+	senderOkCh := make(chan struct{})
+	InitSender(senderOkCh)
 }

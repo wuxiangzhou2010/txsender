@@ -17,23 +17,26 @@ import (
 
 func main() {
 
-	var cfg *config.Config
-	cfg = config.GetConfig("./config.json")
+	cfg := config.GetConfig()
 
 	txsPerRound := cfg.Rate
-	chainAmount := cfg.ChainAmount
+
 	silent := cfg.Silent
 	endpoints := cfg.Endpoints
 	workerSize := cfg.Worker
 	rpcEndPoint := endpoints[0]
 
-	conn, err := ethclient.Dial(rpcEndPoint)
-	ctx := context.Background()
+	conn, err := getConnection(rpcEndPoint)
 	if err != nil {
 		log.Fatal("Whoops something went wrong!", err)
 	}
+	ctx := context.Background()
 
-	sender.InitSender(chainAmount)
+	senderOkCh := make(chan struct{})
+
+	go sender.InitSender(senderOkCh)
+	<-senderOkCh
+
 	sender.UpdateNonce(ctx, conn)
 
 	var total int
@@ -41,7 +44,7 @@ func main() {
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 
-	// update tx sent periodically
+	// update total tx sent
 	ticker1 := time.NewTicker(10 * time.Second)
 	defer ticker1.Stop()
 
@@ -49,7 +52,8 @@ func main() {
 	ch := make(chan *types.Transaction, cfg.TxBuffer)
 
 	go sendTx(ctx, conn, ch, workerSize)
-	fmt.Println("Start to send transactions...")
+
+	log.Println("Start to send transactions...")
 	for {
 		select {
 		case <-ticker.C:
@@ -81,7 +85,7 @@ func main() {
 			}
 		case <-ticker1.C:
 
-			fmt.Println("total tx sent ", total)
+			log.Println("total tx sent ", total)
 
 		}
 	}
@@ -89,11 +93,11 @@ func main() {
 
 func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, workerSize int) {
 	for i := 0; i < workerSize; i++ {
-		go txworker(ctx, conn, txsCh)
+		go txWorker(ctx, conn, txsCh)
 	}
 }
 
-func txworker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
+func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
 		if err != nil {
@@ -101,4 +105,8 @@ func txworker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 		}
 	}
 
+}
+
+func getConnection(rpcEndPoint string) (*ethclient.Client, error) {
+	return ethclient.Dial(rpcEndPoint)
 }

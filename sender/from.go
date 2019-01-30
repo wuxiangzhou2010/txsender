@@ -22,7 +22,6 @@ type Acc struct {
 }
 
 var senderAccounts []*Acc
-var chainAmount int
 
 // GetSender get one account from account array
 func GetSender() *Acc {
@@ -57,7 +56,7 @@ func getAccountFromPath(filePath []string) []*Acc {
 
 		ks.Unlock(account, "123")
 
-		fmt.Println("imported ", "0x"+path[48:])
+		log.Println("imported ", "0x"+path[48:])
 		result = append(result, &Acc{Ks: ks, Account: account})
 
 	}
@@ -72,25 +71,25 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 		panic("nil sender")
 	}
 	for _, v := range senderAccounts {
-		//get Nonce
+
 		nonce, err := conn.NonceAt(ctx, v.Account.Address, nil)
 		if err != nil {
 			panic("err")
 		}
 		v.Nonce = nonce
-		log.Println("Get Nonce ok", v.Account.Address.Hex(), "  ", v.Nonce)
+		log.Println("Get Nonce ok", v.Account.Address.Hex(), "  nonce:", v.Nonce)
 	}
 
 }
 
 // InitSender init the sender
-func InitSender(amount int) {
-	chainAmount = amount
+func InitSender(senderOkCh chan struct{}) {
 
 	path := getPath()
-	keypaths := readKeystore(path)
+	keyPaths := readKeystore(path)
 
-	senderAccounts = getAccountFromPath(keypaths)
+	senderAccounts = getAccountFromPath(keyPaths)
+	defer close(senderOkCh)
 }
 
 func getPath() string {
@@ -101,6 +100,6 @@ func getPath() string {
 
 	keystoreDir := filepath.Join(dir, "keystore")
 
-	fmt.Println("current dir ", dir, "keystore dir ", keystoreDir)
+	//fmt.Println("current dir ", dir, "keystore dir ", keystoreDir)
 	return keystoreDir
 }

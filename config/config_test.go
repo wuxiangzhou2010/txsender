@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestSum(t *testing.T) {
-	path := "../config.json"
-	fmt.Printf("%#v \n", GetConfig(path))
+func TestGetConfig(t *testing.T) {
+
+	fmt.Printf("%#v \n", GetConfig())
 }
