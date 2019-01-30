@@ -4,32 +4,33 @@ import (
 	"./config"
 	"./recipient"
 	"./sender"
+	"sync"
 
 	"context"
 	"fmt"
 	"log"
 	"math/big"
+	"sync/atomic"
 	"time"
 
 	"github.com/comatrix/go-comatrix/core/types"
 	"github.com/comatrix/go-comatrix/ethclient"
 )
 
+var silent bool
+var totalSent int32
+
+var cfg *config.Config
+
 func main() {
 
-	cfg := config.GetConfig()
+	cfg = config.GetConfig()
 
-	txsPerRound := cfg.Rate
-
-	silent := cfg.Silent
+	silent = cfg.Silent
 	endpoints := cfg.Endpoints
-	workerSize := cfg.Worker
-	rpcEndPoint := endpoints[0]
 
-	conn, err := getConnection(rpcEndPoint)
-	if err != nil {
-		log.Fatal("Whoops something went wrong!", err)
-	}
+	conns := getConnections(endpoints)
+
 	ctx := context.Background()
 
 	senderOkCh := make(chan struct{})
@@ -37,76 +38,142 @@ func main() {
 	go sender.InitSender(senderOkCh)
 	<-senderOkCh
 
-	sender.UpdateNonce(ctx, conn)
+	sender.UpdateNonce(ctx, conns[0])
 
-	var total int
-
-	ticker := time.NewTicker(10 * time.Millisecond)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	// update total tx sent
-	ticker1 := time.NewTicker(10 * time.Second)
-	defer ticker1.Stop()
+	// update total tx generated and sent
+	tickerPrint := time.NewTicker(1 * time.Second)
+	defer tickerPrint.Stop()
+	want := cfg.Rate * cfg.Last
 
-	// channel to buffer txs
-	ch := make(chan *types.Transaction, cfg.TxBuffer)
+	senderCh := make(chan *types.Transaction, cfg.SignedTxBuffer)
+	go generateTx(senderCh, want)
 
-	go sendTx(ctx, conn, ch, workerSize)
-
-	log.Println("Start to send transactions...")
 	for {
 		select {
 		case <-ticker.C:
+			go sendTx(ctx, conns, senderCh, cfg.Rate)
 
-			value := big.NewInt(100)            // in wei (1 eth)
-			gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
-			gasLimit := uint64(21000)           // in units
-
-			//get one account
-			account := sender.GetSender()
-
-			from := account.Account.Address
-			to := recipient.GetRecipient()
-			for i := 0; i < txsPerRound/10; i++ {
-
-				tx := types.NewTransaction(account.Nonce, from, to, value, gasLimit, gasPrice, nil, 0)
-
-				signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
-				if err != nil {
-					fmt.Println("signtx error", err, account.Account.Address.Hex())
-				}
-				ch <- signedTx
-
-				account.Nonce = account.Nonce + 1
+		case <-tickerPrint.C:
+			sent := atomic.LoadInt32(&totalSent)
+			log.Println("total tx sent ", sent)
+			if want == sent {
+				log.Println("all txs sent...")
+				tickerPrint.Stop()
 			}
-			total += txsPerRound / 10
-			if !silent {
-				fmt.Println(" generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", txsPerRound/10)
-			}
-		case <-ticker1.C:
-
-			log.Println("total tx sent ", total)
 
 		}
 	}
 }
 
-func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, workerSize int) {
-	for i := 0; i < workerSize; i++ {
-		go txWorker(ctx, conn, txsCh)
+func generateTx(signedTxCh chan *types.Transaction, total int32) {
+	log.Println("[generateTx] Start to Generate", total, " transactions...")
+
+	//get one sender
+	accounts := sender.GetSender()
+	accountsLen := len(accounts)
+	if accountsLen == 0 {
+		panic("[generateTx] wrong accounts")
+	}
+
+	totalPerAccount := total / int32(accountsLen)
+
+	var signedTotal uint32
+	var wgAll sync.WaitGroup
+	for _, account := range accounts {
+		wgAll.Add(1)
+		go func(acc *sender.Acc, w *sync.WaitGroup) {
+			rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
+			go generateRawTx(rawTxCh, acc, totalPerAccount)
+
+			var wg sync.WaitGroup
+			wg.Add(10)
+			for i := 0; i < 10; i++ {
+				go txSigner(rawTxCh, signedTxCh, acc, &signedTotal, &wg)
+			}
+			wg.Wait()
+			w.Done()
+		}(account, &wgAll)
+	}
+	wgAll.Wait()
+	log.Println("[generateTx] all signed txs are generated")
+
+}
+func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCount int32) {
+	defer close(rawTxCh)
+
+	value := big.NewInt(100)            // in wei (100 wei)
+	gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
+	gasLimit := uint64(21000)           // in units
+	from := account.Account.Address
+
+	var totalRaw int
+	round := cfg.TxPerRecipient
+	for rawCount > int32(totalRaw) {
+		//get one recipient
+		to := recipient.GetRecipient()
+		for i := 0; i < round; i++ {
+			tx := types.NewTransaction(account.Nonce, from, to, value, gasLimit, gasPrice, nil, 0)
+
+			atomic.AddUint64(&account.Nonce, 1)
+			rawTxCh <- tx
+		}
+		totalRaw += round
+		if !silent {
+			fmt.Println("[generateRawTx] generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", 20)
+		}
+
+	}
+	log.Println("[generateRawTx] all raw txs are generated")
+
+}
+
+func txSigner(rawTxCh chan *types.Transaction, signedTxCh chan *types.Transaction, account *sender.Acc, signedTotal *uint32, wg *sync.WaitGroup) {
+	for tx := range rawTxCh {
+		signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
+		if err != nil {
+			log.Println("[txSigner] SignTx error", err, account.Account.Address.Hex())
+		}
+		signedTxCh <- signedTx
+		atomic.AddUint32(signedTotal, 1)
+		if *signedTotal%20000 == 0 {
+			log.Println("[txSigner] signedTotal ", *signedTotal)
+		}
+	}
+	wg.Done()
+}
+
+func sendTx(ctx context.Context, conns []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
+	for _, conn := range conns {
+		go txWorker(ctx, conn, txsCh, count)
 	}
 }
 
-func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction) {
+func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, count int32) {
+	var c int32
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
 		if err != nil {
 			log.Fatal("SendTransaction error ", err, signedTx)
 		}
+		atomic.AddInt32(&totalSent, 1)
+		c++
+		if c == count {
+			return
+		}
 	}
-
 }
 
-func getConnection(rpcEndPoint string) (*ethclient.Client, error) {
-	return ethclient.Dial(rpcEndPoint)
+func getConnections(rpcEndPoints []string) []*ethclient.Client {
+	var conns []*ethclient.Client
+	for _, endPoint := range rpcEndPoints {
+		conn, err := ethclient.Dial(endPoint)
+		if err != nil {
+			panic("")
+		}
+		conns = append(conns, conn)
+	}
+	return conns
 }

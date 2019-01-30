@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 
@@ -24,12 +23,13 @@ type Acc struct {
 var senderAccounts []*Acc
 
 // GetSender get one account from account array
-func GetSender() *Acc {
+func GetSender() []*Acc {
 	if senderAccounts == nil {
 		panic("GetSender nil senderAccounts ")
 	}
 
-	return senderAccounts[rand.Intn(len(senderAccounts))]
+	//return senderAccounts[rand.Intn(len(senderAccounts))]
+	return senderAccounts
 }
 
 func (aa *Acc) String() string {
@@ -60,7 +60,9 @@ func getAccountFromPath(filePath []string) []*Acc {
 		result = append(result, &Acc{Ks: ks, Account: account})
 
 	}
-
+	if err := os.RemoveAll("./tmp"); err != nil {
+		log.Fatal(err)
+	}
 	return result
 
 }
@@ -103,3 +105,15 @@ func getPath() string {
 	//fmt.Println("current dir ", dir, "keystore dir ", keystoreDir)
 	return keystoreDir
 }
+
+//func getSenderChs(len int, bufferSize int) []chan *types.Transaction {
+//	var senderChs []chan *types.Transaction
+//	for i := 0; i < len; i++ {
+//		senderChs = append(senderChs, make(chan *types.Transaction, bufferSize))
+//	}
+//	return senderChs
+//}
+//
+//func getOnceCh(chs []chan *types.Transaction) chan *types.Transaction {
+//	return chs[rand.Intn(len(chs))]
+//}

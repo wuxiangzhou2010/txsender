@@ -10,12 +10,15 @@ import (
 // Config is default config for tx_sender
 type Config struct {
 	Endpoints []string `json:"endpoints"`
-	Rate      int      `json:"rate"`
+	Rate      int32    `json:"rate"`
 
-	ChainAmount int  `json:"chainAmount"`
-	Silent      bool `json:"silent"`
-	TxBuffer    int  `json:"txBuffer"`
-	Worker      int  `json:"worker"`
+	ChainAmount    int   `json:"chainAmount"`
+	Silent         bool  `json:"silent"`
+	SignedTxBuffer int   `json:"signedTxBuffer"`
+	RawTxBuffer    int   `json:"rawTxBuffer"`
+	Last           int32 `json:"last"`
+	TxPerRecipient int   `json:"txPerRecipient"`
+	SignerWorkerk  int   `json:"signerWorkerk"`
 }
 
 // GetConfig get the config from json file
@@ -40,11 +43,12 @@ func GetConfig() *Config {
 
 func PrintConfig(cfg *Config) {
 	log.Print(
-		"\n#######################\n",
+		"\n##### config ########\n",
 		"rate\t\t\t: ", cfg.Rate,
 		"\nendpoint\t\t: ", cfg.Endpoints,
-		"\ntxBuffer\t\t: ", cfg.TxBuffer,
-		"\nworker\t\t\t: ", cfg.Worker,
+		"\ntxBuffer\t\t: ", cfg.RawTxBuffer,
+		"\nsignedTxBuffer\t\t: ", cfg.SignedTxBuffer,
+		"\nlast\t\t\t: ", cfg.Last,
 		"\n#######################\n",
 	)
 }

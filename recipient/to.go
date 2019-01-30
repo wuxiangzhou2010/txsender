@@ -11,18 +11,8 @@ const recipientAmount = 1000
 
 var recipients []common.Address
 
-//func toAddress(strings []string) []common.Address {
-//	var result []common.Address
-//
-//	for _, v := range strings {
-//		result = append(result, common.HexToAddress(v))
-//	}
-//	return result
-//}
-
 func initTo() {
-	//from generated address
-	generateAddress()
+	generateRecipientAddress()
 }
 
 // GetRecipient get one recipient
@@ -30,12 +20,11 @@ func GetRecipient() common.Address {
 	if recipients == nil {
 		initTo()
 	}
-
 	return recipients[rand.Intn(len(recipients))]
 
 }
 
-func generateAddress() {
+func generateRecipientAddress() {
 
 	for i := 0; i < recipientAmount; i++ {
 		// Create an account

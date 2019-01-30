@@ -1,10 +1,11 @@
 {
     "endpoints": [
-        "http://172.16.3.191:8545"
+        "http://127.0.0.1:8545"
     ],
     "rate": 200,
     "chainAmount": 2,
     "silent": true,
-    "txBuffer": 1000,
-    "worker": 1
+    "signedTxBuffer": 100,
+    "rawTxBuffer":2000,
+    "last":100
 }
