@@ -76,6 +76,7 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 
 		nonce, err := conn.NonceAt(ctx, v.Account.Address, nil)
 		if err != nil {
+			fmt.Println("err", err)
 			panic("err")
 		}
 		v.Nonce = nonce

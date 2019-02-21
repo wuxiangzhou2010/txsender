@@ -68,7 +68,7 @@ func main() {
 	}
 }
 
-func generateTx(signedTxCh chan *types.Transaction, total int32) {
+func generateTx(senderCh chan *types.Transaction, total int32) {
 	log.Println("[generateTx] Start to Generate", total, " transactions...")
 
 	//get one sender
@@ -80,20 +80,20 @@ func generateTx(signedTxCh chan *types.Transaction, total int32) {
 
 	totalPerAccount := total / int32(accountsLen)
 
-	var signedTotal uint32
+	//var signedTotal uint32
 	var wgAll sync.WaitGroup
 	for _, account := range accounts {
 		wgAll.Add(1)
 		go func(acc *sender.Acc, w *sync.WaitGroup) {
-			rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
-			go generateRawTx(rawTxCh, acc, totalPerAccount)
+			//rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
+			go generateRawTx(senderCh, acc, totalPerAccount)
 
-			var wg sync.WaitGroup
-			wg.Add(10)
-			for i := 0; i < 10; i++ {
-				go txSigner(rawTxCh, signedTxCh, acc, &signedTotal, &wg)
-			}
-			wg.Wait()
+			//var wg sync.WaitGroup
+			//wg.Add(10)
+			//for i := 0; i < 10; i++ {
+			//	go txSigner(rawTxCh, signedTxCh, acc, &signedTotal, &wg)
+			//}
+			//wg.Wait()
 			w.Done()
 		}(account, &wgAll)
 	}
@@ -104,9 +104,9 @@ func generateTx(signedTxCh chan *types.Transaction, total int32) {
 func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCount int32) {
 	defer close(rawTxCh)
 
-	value := big.NewInt(100)            // in wei (100 wei)
-	gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
-	gasLimit := uint64(21000)           // in units
+	value := big.NewInt(1)    // in wei (100 wei)
+	gasPrice := big.NewInt(1) // in wei (30 gwei)
+	gasLimit := uint64(21000) // in units
 	from := account.Account.Address
 
 	var totalRaw int
@@ -126,24 +126,25 @@ func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCoun
 		}
 
 	}
-	log.Println("[generateRawTx] all raw txs are generated")
+	log.Println("[generateRawTx] all raw txs are generated, totalRaw", totalRaw)
 
 }
 
-func txSigner(rawTxCh chan *types.Transaction, signedTxCh chan *types.Transaction, account *sender.Acc, signedTotal *uint32, wg *sync.WaitGroup) {
-	for tx := range rawTxCh {
-		signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
-		if err != nil {
-			log.Println("[txSigner] SignTx error", err, account.Account.Address.Hex())
-		}
-		signedTxCh <- signedTx
-		atomic.AddUint32(signedTotal, 1)
-		if *signedTotal%20000 == 0 {
-			log.Println("[txSigner] signedTotal ", *signedTotal)
-		}
-	}
-	wg.Done()
-}
+//
+//func txSigner(rawTxCh chan *types.Transaction, signedTxCh chan *types.Transaction, account *sender.Acc, signedTotal *uint32, wg *sync.WaitGroup) {
+//	for tx := range rawTxCh {
+//		signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
+//		if err != nil {
+//			log.Println("[txSigner] SignTx error", err, account.Account.Address.Hex())
+//		}
+//		signedTxCh <- signedTx
+//		atomic.AddUint32(signedTotal, 1)
+//		if *signedTotal%20000 == 0 {
+//			log.Println("[txSigner] signedTotal ", *signedTotal)
+//		}
+//	}
+//	wg.Done()
+//}
 
 func sendTx(ctx context.Context, conns []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
 	for _, conn := range conns {

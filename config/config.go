@@ -18,7 +18,7 @@ type Config struct {
 	RawTxBuffer    int   `json:"rawTxBuffer"`
 	Last           int32 `json:"last"`
 	TxPerRecipient int   `json:"txPerRecipient"`
-	SignerWorkerk  int   `json:"signerWorkerk"`
+	SignerWorker   int   `json:"signerWorker"`
 }
 
 // GetConfig get the config from json file

@@ -1,13 +1,11 @@
 {
-    "endpoints": [
-        "\\\\.\\pipe\\geth1.ipc"
-    ],
-    "rate": 40000,
-    "chainAmount": 2,
-    "silent": true,
-    "rawTxBuffer": 60000,
-    "signedTxBuffer": 60000,
-    "last":40,
-    "txPerRecipient":20,
-    "signerWorkerk":20
+  "endpoints": ["\\\\.\\pipe\\geth1.ipc"],
+  "rate": 10000,
+  "chainAmount": 1,
+  "silent": true,
+  "rawTxBuffer": 60000,
+  "signedTxBuffer": 60000,
+  "last": 60,
+  "txPerRecipient": 20,
+  "signerWorker": 20
 }
