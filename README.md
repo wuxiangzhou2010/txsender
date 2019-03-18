@@ -13,6 +13,7 @@ $ go get github.com/wuxiangzhou2010/txsender
 - prepare keystore
 
 make a keystore and put the keystore in
+
 ```sh
 mkdir keystore
 ```
@@ -45,3 +46,7 @@ default configuration
 ```
 $ txsender
 ```
+
+reference:
+
+- [how to create an ethereum account](https://ethereum.stackexchange.com/questions/39900/create-ethereum-account-using-golang)
