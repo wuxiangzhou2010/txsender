@@ -23,7 +23,6 @@ func TestInit(t *testing.T) {
 	if err != nil {
 		log.Fatal("Whoops something went wrong!", err)
 	}
-	senderOkCh := make(chan struct{})
-	sender.InitSender(senderOkCh)
+	sender.InitSender()
 	sender.UpdateNonce(ctx, conn)
 }
