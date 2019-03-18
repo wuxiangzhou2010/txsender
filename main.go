@@ -85,7 +85,7 @@ func generateTx(txChannel chan *types.Transaction, total int32) {
 		wgAll.Add(1)
 		go func(acc *sender.Acc, w *sync.WaitGroup) {
 			//rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
-			go generateRawTx(txChannel, acc, totalPerAccount)
+			generateRawTx(txChannel, acc, totalPerAccount)
 
 			//var wg sync.WaitGroup
 			//wg.Add(10)
