@@ -5,9 +5,9 @@ import (
 	"log"
 	"testing"
 
-	"./config"
-	"./sender"
-	"github.com/comatrix/go-comatrix/ethclient"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/wuxiangzhou2010/txsender/config"
+	"github.com/wuxiangzhou2010/txsender/sender"
 )
 
 func TestInit(t *testing.T) {

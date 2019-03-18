@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/comatrix/go-comatrix/accounts"
-	"github.com/comatrix/go-comatrix/accounts/keystore"
-	"github.com/comatrix/go-comatrix/ethclient"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // Acc is an accout that with keystore

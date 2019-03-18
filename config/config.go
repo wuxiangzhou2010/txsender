@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Config is default config for tx_sender
+// Config is default config for txsender
 type Config struct {
 	Endpoints []string `json:"endpoints"`
 	Rate      int32    `json:"rate"`

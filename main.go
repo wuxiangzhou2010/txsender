@@ -1,20 +1,19 @@
 package main
 
 import (
-	"./config"
-	"./recipient"
-	"./sender"
-	"sync"
-
 	"context"
 	"fmt"
 	"log"
 	"math/big"
+	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/comatrix/go-comatrix/core/types"
-	"github.com/comatrix/go-comatrix/ethclient"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/wuxiangzhou2010/txsender/config"
+	"github.com/wuxiangzhou2010/txsender/recipient"
+	"github.com/wuxiangzhou2010/txsender/sender"
 )
 
 var silent bool
@@ -115,7 +114,7 @@ func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCoun
 		//get one recipient
 		to := recipient.GetRecipient()
 		for i := 0; i < round; i++ {
-			tx := types.NewTransaction(account.Nonce, from, to, value, gasLimit, gasPrice, nil, 0)
+			tx := types.NewTransaction(account.Nonce, to, value, gasLimit, gasPrice, nil)
 
 			atomic.AddUint64(&account.Nonce, 1)
 			rawTxCh <- tx
