@@ -28,7 +28,12 @@ func main() {
 	silent = cfg.Silent
 	endpoints := cfg.Endpoints
 
-	conns := getConnections(endpoints)
+	conns, err := getConnections(endpoints)
+
+	if err != nil {
+		fmt.Println("getConnections failed, ", err)
+		return
+	}
 
 	ctx := context.Background()
 
@@ -166,14 +171,14 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	}
 }
 
-func getConnections(rpcEndPoints []string) []*ethclient.Client {
+func getConnections(rpcEndPoints []string) ([]*ethclient.Client, error) {
 	var conns []*ethclient.Client
 	for _, endPoint := range rpcEndPoints {
 		conn, err := ethclient.Dial(endPoint)
 		if err != nil {
-			panic("")
+			return nil, fmt.Errorf("can't establish connection to [%s], [error]: %v", endPoint, err)
 		}
 		conns = append(conns, conn)
 	}
-	return conns
+	return conns, nil
 }
