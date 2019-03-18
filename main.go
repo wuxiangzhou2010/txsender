@@ -28,7 +28,7 @@ func main() {
 	silent = cfg.Silent
 	endpoints := cfg.Endpoints
 
-	conns, err := getConnections(endpoints)
+	cons, err := getConnections(endpoints)
 
 	if err != nil {
 		fmt.Println("getConnections failed, ", err)
@@ -42,7 +42,7 @@ func main() {
 	go sender.InitSender(senderOkCh)
 	<-senderOkCh
 
-	sender.UpdateNonce(ctx, conns[0])
+	sender.UpdateNonce(ctx, cons[0])
 
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -58,7 +58,7 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			go sendTx(ctx, conns, senderCh, cfg.Rate)
+			go sendTx(ctx, cons, senderCh, cfg.Rate)
 
 		case <-tickerPrint.C:
 			sent := atomic.LoadInt32(&totalSent)
@@ -150,8 +150,8 @@ func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCoun
 //	wg.Done()
 //}
 
-func sendTx(ctx context.Context, conns []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
-	for _, conn := range conns {
+func sendTx(ctx context.Context, cons []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
+	for _, conn := range cons {
 		go txWorker(ctx, conn, txsCh, count)
 	}
 }
@@ -172,13 +172,13 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 }
 
 func getConnections(rpcEndPoints []string) ([]*ethclient.Client, error) {
-	var conns []*ethclient.Client
+	var cons []*ethclient.Client
 	for _, endPoint := range rpcEndPoints {
 		conn, err := ethclient.Dial(endPoint)
 		if err != nil {
 			return nil, fmt.Errorf("can't establish connection to [%s], [error]: %v", endPoint, err)
 		}
-		conns = append(conns, conn)
+		cons = append(cons, conn)
 	}
-	return conns, nil
+	return cons, nil
 }
