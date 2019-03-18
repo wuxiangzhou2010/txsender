@@ -47,13 +47,13 @@ func main() {
 	defer tickerPrint.Stop()
 	want := cfg.Rate * cfg.Last
 
-	senderCh := make(chan *types.Transaction, cfg.SignedTxBuffer)
-	go generateTx(senderCh, want)
+	txChannel := make(chan *types.Transaction, cfg.SignedTxBuffer)
+	go generateTx(txChannel, want)
 
 	for {
 		select {
 		case <-ticker.C:
-			go sendTx(ctx, cons, senderCh, cfg.Rate)
+			go sendTx(ctx, cons, txChannel, cfg.Rate)
 
 		case <-tickerPrint.C:
 			sent := atomic.LoadInt32(&totalSent)
@@ -67,7 +67,7 @@ func main() {
 	}
 }
 
-func generateTx(senderCh chan *types.Transaction, total int32) {
+func generateTx(txChannel chan *types.Transaction, total int32) {
 	log.Println("[generateTx] Start to Generate", total, " transactions...")
 
 	//get one sender
@@ -85,7 +85,7 @@ func generateTx(senderCh chan *types.Transaction, total int32) {
 		wgAll.Add(1)
 		go func(acc *sender.Acc, w *sync.WaitGroup) {
 			//rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
-			go generateRawTx(senderCh, acc, totalPerAccount)
+			go generateRawTx(txChannel, acc, totalPerAccount)
 
 			//var wg sync.WaitGroup
 			//wg.Add(10)
