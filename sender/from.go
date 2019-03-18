@@ -86,13 +86,13 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 }
 
 // InitSender init the sender
-func InitSender(senderOkCh chan struct{}) {
+func InitSender() {
 
 	path := getPath()
 	keyPaths := readKeystore(path)
 
 	senderAccounts = getAccountFromPath(keyPaths)
-	defer close(senderOkCh)
+	fmt.Println("sender inited")
 }
 
 func getPath() string {
@@ -118,3 +118,7 @@ func getPath() string {
 //func getOnceCh(chs []chan *types.Transaction) chan *types.Transaction {
 //	return chs[rand.Intn(len(chs))]
 //}
+
+func init() {
+	InitSender()
+}

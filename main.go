@@ -37,11 +37,6 @@ func main() {
 
 	ctx := context.Background()
 
-	senderOkCh := make(chan struct{})
-
-	go sender.InitSender(senderOkCh)
-	<-senderOkCh
-
 	sender.UpdateNonce(ctx, cons[0])
 
 	ticker := time.NewTicker(1 * time.Second)
