@@ -9,6 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.8.23
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
+	github.com/rjeczalik/notify v0.9.2 // indirect
 	github.com/rs/cors v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect
