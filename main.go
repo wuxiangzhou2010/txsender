@@ -32,8 +32,8 @@ func main() {
 	defer senderTicker.Stop()
 
 	// update total tx generated and sent
-	tickerPrint := time.NewTicker(1 * time.Second)
-	defer tickerPrint.Stop()
+	printTicker := time.NewTicker(1 * time.Second)
+	defer printTicker.Stop()
 	want := cfg.Rate * cfg.Last
 
 	txChannel := make(chan *types.Transaction, cfg.SignedTxBuffer)
@@ -44,12 +44,12 @@ func main() {
 		case <-senderTicker.C:
 			go sendTx(ctx, cons, txChannel, cfg.Rate)
 
-		case <-tickerPrint.C:
+		case <-printTicker.C:
 			sent := atomic.LoadInt32(&totalSent)
 			log.Println("total tx sent ", sent)
 			if want == sent {
 				log.Println("all txs sent...")
-				tickerPrint.Stop()
+				printTicker.Stop()
 				return
 			}
 
