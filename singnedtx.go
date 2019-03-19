@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"github.com/wuxiangzhou2010/txsender/config"
-	"log"
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	log "github.com/sirupsen/logrus"
+	"github.com/wuxiangzhou2010/txsender/config"
 )
 
 type signedTxGenerator struct {
@@ -25,7 +24,7 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 	go func() {
 		for rawtx := range rawtxs {
 
-			fmt.Println("sign raw tx, ", rawtx.Nonce())
+			log.Debug("sign raw tx, ", rawtx.Nonce())
 			signedTx, err := sg.acc.Ks.SignTx(sg.acc.Account, rawtx, nil)
 			if err != nil {
 				log.Println("[txSigner] SignTx error", err, sg.acc.Account.Address.Hex())
