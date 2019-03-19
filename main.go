@@ -28,8 +28,8 @@ func main() {
 
 	sender.UpdateNonce(ctx, cons[0])
 
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+	senderTicker := time.NewTicker(1 * time.Second)
+	defer senderTicker.Stop()
 
 	// update total tx generated and sent
 	tickerPrint := time.NewTicker(1 * time.Second)
@@ -41,7 +41,7 @@ func main() {
 
 	for {
 		select {
-		case <-ticker.C:
+		case <-senderTicker.C:
 			go sendTx(ctx, cons, txChannel, cfg.Rate)
 
 		case <-tickerPrint.C:
