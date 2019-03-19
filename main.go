@@ -61,6 +61,7 @@ func main() {
 			if want == sent {
 				log.Println("all txs sent...")
 				tickerPrint.Stop()
+				return
 			}
 
 		}
