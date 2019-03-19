@@ -3,8 +3,8 @@
   "rate": 200,
   "chainAmount": 1,
   "silent": true,
-  "rawTxBuffer": 60,
-  "signedTxBuffer": 60,
+  "rawTxBuffer": 6,
+  "signedTxBuffer": 6,
   "last": 6,
   "txPerRecipient": 20,
   "signerWorker": 20
