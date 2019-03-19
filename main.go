@@ -20,21 +20,9 @@ var silent bool
 var totalSent int32
 
 var cfg *config.Config
-
-func init() {
-	cfg = config.GetConfig()
-	silent = cfg.Silent
-}
+var cons []*ethclient.Client
 
 func main() {
-
-	endpoints := cfg.Endpoints
-	cons, err := getConnections(endpoints)
-
-	if err != nil {
-		fmt.Println("getConnections failed, ", err)
-		return
-	}
 
 	ctx := context.Background()
 
@@ -179,4 +167,20 @@ func getConnections(rpcEndPoints []string) ([]*ethclient.Client, error) {
 		cons = append(cons, conn)
 	}
 	return cons, nil
+}
+
+func init() {
+
+	//init configuration
+	cfg = config.GetConfig()
+	silent = cfg.Silent
+
+	//init connection
+	var err error
+	cons, err = getConnections(cfg.Endpoints)
+
+	if err != nil {
+		fmt.Println("getConnections failed, ", err)
+		return
+	}
 }
