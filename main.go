@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/big"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/wuxiangzhou2010/txsender/config"
-	"github.com/wuxiangzhou2010/txsender/recipient"
 	"github.com/wuxiangzhou2010/txsender/sender"
 )
 
@@ -36,13 +33,16 @@ func main() {
 	defer printTicker.Stop()
 	want := cfg.Rate * cfg.Last
 
-	txChannel := make(chan *types.Transaction, cfg.SignedTxBuffer)
-	go generateTx(txChannel, want)
+	var generator txGenerator
+	generator = &signedTxGenerator{}
+	generator.InitGenerator(cfg)
+	txChannel := generator.GenerateTxs()
 
 	for {
 		select {
 		case <-senderTicker.C:
 			go sendTx(ctx, cons, txChannel, cfg.Rate)
+			// fmt.Println("signed tx ", <-txChannel)
 
 		case <-printTicker.C:
 			sent := atomic.LoadInt32(&totalSent)
@@ -57,85 +57,6 @@ func main() {
 	}
 }
 
-func generateTx(txChannel chan *types.Transaction, total int32) {
-	log.Println("[generateTx] Start to Generate", total, " transactions...")
-
-	//get one sender
-	accounts := sender.GetSender()
-	accountsLen := len(accounts)
-	if accountsLen == 0 {
-		panic("[generateTx] wrong accounts")
-	}
-
-	totalPerAccount := total / int32(accountsLen)
-
-	var signedTotal uint32
-	var wgAll sync.WaitGroup
-	for _, account := range accounts {
-		wgAll.Add(1)
-		go func(acc *sender.Acc, w *sync.WaitGroup) {
-			rawTxCh := make(chan *types.Transaction, cfg.RawTxBuffer)
-			go generateRawTx(rawTxCh, acc, totalPerAccount)
-
-			// sign txs
-			var wg sync.WaitGroup
-			wg.Add(10)
-			for i := 0; i < 10; i++ {
-				go txSigner(rawTxCh, txChannel, acc, &signedTotal, &wg)
-			}
-			wg.Wait()
-
-			w.Done()
-		}(account, &wgAll)
-	}
-	wgAll.Wait()
-	log.Println("[generateTx] all signed txs are generated")
-
-}
-func generateRawTx(rawTxCh chan *types.Transaction, account *sender.Acc, rawCount int32) {
-	defer close(rawTxCh)
-
-	value := big.NewInt(1)    // in wei (100 wei)
-	gasPrice := big.NewInt(1) // in wei (30 gwei)
-	gasLimit := uint64(21000) // in units
-	from := account.Account.Address
-
-	var totalRaw int
-	round := cfg.TxPerRecipient
-	for rawCount > int32(totalRaw) {
-		//get one recipient
-		to := recipient.GetRecipient()
-		for i := 0; i < round; i++ {
-			tx := types.NewTransaction(account.Nonce, to, value, gasLimit, gasPrice, nil)
-
-			atomic.AddUint64(&account.Nonce, 1)
-			rawTxCh <- tx
-		}
-		totalRaw += round
-		if !silent {
-			fmt.Println("[generateRawTx] generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", 20)
-		}
-
-	}
-	log.Println("[generateRawTx] all raw txs are generated, totalRaw", totalRaw)
-
-}
-
-func txSigner(rawTxCh chan *types.Transaction, signedTxCh chan *types.Transaction, account *sender.Acc, signedTotal *uint32, wg *sync.WaitGroup) {
-	for tx := range rawTxCh {
-		signedTx, err := account.Ks.SignTx(account.Account, tx, nil)
-		if err != nil {
-			log.Println("[txSigner] SignTx error", err, account.Account.Address.Hex())
-		}
-		signedTxCh <- signedTx
-		atomic.AddUint32(signedTotal, 1)
-		if *signedTotal%20000 == 0 {
-			log.Println("[txSigner] signedTotal ", *signedTotal)
-		}
-	}
-	wg.Done()
-}
-
 func sendTx(ctx context.Context, cons []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
 	for _, conn := range cons {
 		go txWorker(ctx, conn, txsCh, count)
@@ -146,7 +67,9 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	var c int32
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
+		fmt.Println("sent a trancaction")
 		if err != nil {
+			fmt.Printf("error signedTx %+v\n", signedTx)
 			log.Fatal("SendTransaction error ", err, signedTx)
 		}
 		atomic.AddInt32(&totalSent, 1)
