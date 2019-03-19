@@ -21,13 +21,14 @@ var totalSent int32
 
 var cfg *config.Config
 
+func init() {
+	cfg = config.GetConfig()
+	silent = cfg.Silent
+}
+
 func main() {
 
-	cfg = config.GetConfig()
-
-	silent = cfg.Silent
 	endpoints := cfg.Endpoints
-
 	cons, err := getConnections(endpoints)
 
 	if err != nil {
