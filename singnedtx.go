@@ -21,8 +21,11 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 
 	go func() {
 		var signedTotal int32
+
 		log.Info("[signTx] start to sign transaciton")
 		defer func() { log.Info("[signTx] stop sign transactions, total signed", signedTotal) }()
+		defer close(sg.signedTxCh)
+
 		for rawtx := range rawtxs {
 
 			log.Debug("sign raw tx, ", rawtx.Nonce())

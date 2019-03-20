@@ -45,6 +45,7 @@ func (rg *rawTxGenerator) generateTxs() chan *types.Transaction {
 		defer func() {
 			log.Println("[rawTx] stop generate raw transacitons, total generated", temp)
 		}()
+		defer close(rg.rawTxCh)
 		for rg.total > temp {
 			//get one recipient
 			to := recipient.GetRecipient()
