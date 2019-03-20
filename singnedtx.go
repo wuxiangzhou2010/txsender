@@ -1,8 +1,6 @@
 package main
 
 import (
-	"sync/atomic"
-
 	"github.com/ethereum/go-ethereum/core/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/wuxiangzhou2010/txsender/config"
@@ -22,6 +20,7 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 	rawtxs := sg.generateTxs()
 
 	go func() {
+		var signedTotal int32
 		for rawtx := range rawtxs {
 
 			log.Debug("sign raw tx, ", rawtx.Nonce())
@@ -30,9 +29,9 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 				log.Println("[txSigner] SignTx error", err, sg.acc.Account.Address.Hex())
 			}
 			sg.signedTxCh <- signedTx
-			atomic.AddUint32(&sg.total, 1)
-			if sg.total%20000 == 0 {
-				log.Println("[txSigner] signedTotal ", sg.total)
+			signedTotal++
+			if signedTotal%200 == 0 {
+				log.Println("[txSigner] signedTotal ", signedTotal)
 			}
 
 		}
