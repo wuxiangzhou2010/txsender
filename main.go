@@ -107,7 +107,7 @@ func init() {
 
 	if err != nil {
 		fmt.Println("getConnections failed, ", err)
-		return
+		os.Exit(-1)
 	}
 
 	// Log as JSON instead of the default ASCII formatter.
