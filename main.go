@@ -20,13 +20,13 @@ var silent bool
 var totalSent int32
 
 var cfg *config.Config
-var cons []*ethclient.Client
+var con *ethclient.Client
 
 func main() {
 
 	ctx := context.Background()
 
-	sender.UpdateNonce(ctx, cons[0])
+	sender.UpdateNonce(ctx, con)
 
 	senderTicker := time.NewTicker(1 * time.Second)
 	defer senderTicker.Stop()
@@ -42,7 +42,7 @@ func main() {
 	for {
 		select {
 		case <-senderTicker.C:
-			go sendTx(ctx, cons, txChannel, cfg.Rate)
+			go sendTx(ctx, con, txChannel, cfg.Rate)
 
 		case <-printTicker.C:
 			sent := atomic.LoadInt32(&totalSent)
@@ -136,10 +136,10 @@ func txSigner(rawTxCh chan *types.Transaction, signedTxCh chan *types.Transactio
 	wg.Done()
 }
 
-func sendTx(ctx context.Context, cons []*ethclient.Client, txsCh chan *types.Transaction, count int32) {
-	for _, conn := range cons {
-		go txWorker(ctx, conn, txsCh, count)
-	}
+func sendTx(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, count int32) {
+
+	go txWorker(ctx, conn, txsCh, count)
+
 }
 
 func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Transaction, count int32) {
@@ -157,16 +157,14 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	}
 }
 
-func getConnections(rpcEndPoints []string) ([]*ethclient.Client, error) {
-	var cons []*ethclient.Client
-	for _, endPoint := range rpcEndPoints {
-		conn, err := ethclient.Dial(endPoint)
-		if err != nil {
-			return nil, fmt.Errorf("can't establish connection to [%s], [error]: %v", endPoint, err)
-		}
-		cons = append(cons, conn)
+func getConnections(rpcEndPoint string) (*ethclient.Client, error) {
+
+	conn, err := ethclient.Dial(rpcEndPoint)
+	if err != nil {
+		return nil, fmt.Errorf("can't establish connection to [%s], [error]: %v", rpcEndPoint, err)
 	}
-	return cons, nil
+
+	return conn, nil
 }
 
 func init() {
@@ -177,7 +175,7 @@ func init() {
 
 	//init connection
 	var err error
-	cons, err = getConnections(cfg.Endpoints)
+	con, err = getConnections(cfg.Endpoint)
 
 	if err != nil {
 		fmt.Println("getConnections failed, ", err)

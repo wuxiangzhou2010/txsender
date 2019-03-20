@@ -9,8 +9,8 @@ import (
 
 // Config is default config for txsender
 type Config struct {
-	Endpoints []string `json:"endpoints"`
-	Rate      int32    `json:"rate"`
+	Endpoint string `json:"endpoint"`
+	Rate     int32  `json:"rate"`
 
 	ChainAmount    int   `json:"chainAmount"`
 	Silent         bool  `json:"silent"`
@@ -45,7 +45,7 @@ func PrintConfig(cfg *Config) {
 	log.Print(
 		"\n##### config ########\n",
 		"rate\t\t\t: ", cfg.Rate,
-		"\nendpoint\t\t: ", cfg.Endpoints,
+		"\nendpoint\t\t: ", cfg.Endpoint,
 		"\ntxBuffer\t\t: ", cfg.RawTxBuffer,
 		"\nsignedTxBuffer\t\t: ", cfg.SignedTxBuffer,
 		"\nlast\t\t\t: ", cfg.Last,

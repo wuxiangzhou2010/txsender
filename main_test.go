@@ -14,9 +14,9 @@ func TestInit(t *testing.T) {
 	var cfg *config.Config
 	cfg = config.GetConfig()
 
-	endpoints := cfg.Endpoints
+	endpoint := cfg.Endpoint
 
-	rpcEndPoint := endpoints[0]
+	rpcEndPoint := endpoint[0]
 
 	conn, err := ethclient.Dial(rpcEndPoint)
 	ctx := context.Background()

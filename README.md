@@ -19,7 +19,7 @@ mkdir keystore
 ```
 
 - edit config
-  - `endpoints` is a string array contains ipc or rpc endpoints
+  - `endpoint` is a string array contains ipc or rpc endpoint
   - `rate`: indicate how many txs per seconds
   - `chainAmount`: reserved
   - `silent`: print log or not
@@ -31,7 +31,7 @@ default configuration
 
 ```json
 {
-  "endpoints": ["http://127.0.0.1:8545"],
+  "endpoint": "http://127.0.0.1:8545",
   "rate": 200,
   "chainAmount": 2,
   "silent": true,

@@ -1,11 +1,9 @@
 {
-    "endpoints": [
-        "http://127.0.0.1:8545"
-    ],
-    "rate": 200,
-    "chainAmount": 2,
-    "silent": true,
-    "signedTxBuffer": 100,
-    "rawTxBuffer":2000,
-    "last":100
+  "endpoint": "http://127.0.0.1:8545",
+  "rate": 200,
+  "chainAmount": 2,
+  "silent": true,
+  "signedTxBuffer": 100,
+  "rawTxBuffer": 2000,
+  "last": 100
 }
