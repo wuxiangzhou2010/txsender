@@ -10,9 +10,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 	"github.com/wuxiangzhou2010/txsender/config"
 	"github.com/wuxiangzhou2010/txsender/sender"
-	log "github.com/sirupsen/logrus"
 )
 
 var silent bool
@@ -72,7 +72,7 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	var c int32
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
-		log.Debug("sent a trancaction")
+		log.Debug("sent a transaction")
 		if err != nil {
 			fmt.Printf("error signedTx %+v\n", signedTx)
 			log.Fatal("SendTransaction error ", err, signedTx)
