@@ -1,5 +1,5 @@
 {
-  "endpoints": ["\\\\.\\pipe\\geth1.ipc"],
+  "endpoint": "\\\\.\\pipe\\geth1.ipc",
   "rate": 200,
   "chainAmount": 1,
   "silent": true,
