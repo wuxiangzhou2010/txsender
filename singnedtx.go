@@ -21,6 +21,8 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 
 	go func() {
 		var signedTotal int32
+		log.Info("[signTx] start to sign transaciton")
+		defer func() { log.Info("[signTx] stop sign transactions, total signed", signedTotal) }()
 		for rawtx := range rawtxs {
 
 			log.Debug("sign raw tx, ", rawtx.Nonce())
@@ -29,12 +31,14 @@ func (sg *signedTxGenerator) generateSignedTxs() chan *types.Transaction {
 				log.Println("[txSigner] SignTx error", err, sg.acc.Account.Address.Hex())
 			}
 			sg.signedTxCh <- signedTx
+
 			signedTotal++
+
 			if signedTotal%200 == 0 {
 				log.Println("[txSigner] signedTotal ", signedTotal)
 			}
-
 		}
+
 	}()
 	return sg.signedTxCh
 }

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/wuxiangzhou2010/txsender/sender"
 	"math/big"
 	"sync/atomic"
 
+	"github.com/wuxiangzhou2010/txsender/sender"
 	"github.com/ethereum/go-ethereum/core/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/wuxiangzhou2010/txsender/config"
@@ -37,10 +37,14 @@ func (rg *rawTxGenerator) generateTxs() chan *types.Transaction {
 	gasPrice := big.NewInt(1) // in wei (30 gwei)
 	gasLimit := uint64(21000) // in units
 	go func() {
-		from := rg.acc.Account.Address
-
 		var temp uint32
+		from := rg.acc.Account.Address
 		round := rg.config.TxPerRecipient
+
+		log.Info("[rawTx] start to generate raw transactions")
+		defer func() {
+			log.Println("[rawTx] stop generate raw transacitons, total generated", temp)
+		}()
 		for rg.total > temp {
 			//get one recipient
 			to := recipient.GetRecipient()
@@ -55,9 +59,8 @@ func (rg *rawTxGenerator) generateTxs() chan *types.Transaction {
 			if !silent {
 				fmt.Println("[generateRawTx] generate tx  from ", from.Hex(), "to ", to.Hex(), "amount", round)
 			}
-
 		}
-		log.Println("[generateRawTx] all raw txs are generated, temp", temp)
+
 	}()
 	return rg.rawTxCh
 }

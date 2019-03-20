@@ -51,9 +51,9 @@ func main() {
 
 		case <-printTicker.C:
 			sent := atomic.LoadInt32(&totalSent)
-			log.Println("total tx sent ", sent)
+			log.Println("[sendTx] total tx sent ", sent)
 			if want == sent {
-				log.Println("all txs sent...")
+				log.Println("[sendTx] all txs sent...")
 				printTicker.Stop()
 				return
 			}
