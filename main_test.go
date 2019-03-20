@@ -16,7 +16,7 @@ func TestInit(t *testing.T) {
 
 	endpoint := cfg.Endpoint
 
-	rpcEndPoint := endpoint[0]
+	rpcEndPoint := endpoint
 
 	conn, err := ethclient.Dial(rpcEndPoint)
 	ctx := context.Background()
