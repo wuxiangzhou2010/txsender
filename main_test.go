@@ -24,5 +24,7 @@ func TestInit(t *testing.T) {
 		log.Fatal("Whoops something went wrong!", err)
 	}
 	sender.InitSender()
-	sender.UpdateNonce(ctx, conn)
+	if err := sender.UpdateNonce(ctx, conn); err != nil {
+		log.Fatal("updateNonce failed")
+	}
 }

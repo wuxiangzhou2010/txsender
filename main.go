@@ -25,7 +25,10 @@ func main() {
 
 	ctx := context.Background()
 
-	sender.UpdateNonce(ctx, con)
+	if err := sender.UpdateNonce(ctx, con); err != nil {
+		log.Error("Update nonce err")
+		return
+	}
 
 	senderTicker := time.NewTicker(1 * time.Second)
 	defer senderTicker.Stop()
@@ -45,7 +48,6 @@ func main() {
 		case <-senderTicker.C:
 
 			go sendTx(ctx, con, txChannel, cfg.Rate)
-
 
 		case <-printTicker.C:
 			sent := atomic.LoadInt32(&totalSent)

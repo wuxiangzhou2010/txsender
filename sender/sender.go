@@ -68,7 +68,7 @@ func getAccountFromPath(filePath []string) []*Acc {
 }
 
 // UpdateNonce update the nonce of accounts
-func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
+func UpdateNonce(ctx context.Context, conn *ethclient.Client) error {
 	if senderAccounts == nil {
 		panic("nil sender")
 	}
@@ -77,11 +77,12 @@ func UpdateNonce(ctx context.Context, conn *ethclient.Client) {
 		nonce, err := conn.NonceAt(ctx, v.Account.Address, nil)
 		if err != nil {
 			fmt.Println("err", err)
-			panic("err")
+			return err
 		}
 		v.Nonce = nonce
 		log.Println("Get Nonce ok", v.Account.Address.Hex(), "  nonce:", v.Nonce)
 	}
+	return nil
 
 }
 
