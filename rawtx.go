@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/wuxiangzhou2010/txsender/sender"
-	"log"
 	"math/big"
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	log "github.com/sirupsen/logrus"
 	"github.com/wuxiangzhou2010/txsender/config"
 	"github.com/wuxiangzhou2010/txsender/recipient"
 )
@@ -48,7 +48,7 @@ func (rg *rawTxGenerator) generateTxs() chan *types.Transaction {
 				tx := types.NewTransaction(rg.acc.Nonce, to, value, gasLimit, gasPrice, nil)
 
 				atomic.AddUint64(&rg.acc.Nonce, 1)
-				fmt.Println("generated a transaction")
+				log.Debug("generated a transaction")
 				rg.rawTxCh <- tx
 			}
 			temp += uint32(round)

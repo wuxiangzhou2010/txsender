@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"os"
+
 	"sync/atomic"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/wuxiangzhou2010/txsender/config"
 	"github.com/wuxiangzhou2010/txsender/sender"
+	log "github.com/sirupsen/logrus"
 )
 
 var silent bool
@@ -67,7 +69,7 @@ func txWorker(ctx context.Context, conn *ethclient.Client, txsCh chan *types.Tra
 	var c int32
 	for signedTx := range txsCh {
 		err := conn.SendTransaction(ctx, signedTx)
-		fmt.Println("sent a trancaction")
+		log.Debug("sent a trancaction")
 		if err != nil {
 			fmt.Printf("error signedTx %+v\n", signedTx)
 			log.Fatal("SendTransaction error ", err, signedTx)
@@ -106,4 +108,15 @@ func init() {
 		fmt.Println("getConnections failed, ", err)
 		return
 	}
+
+	// Log as JSON instead of the default ASCII formatter.
+	log.SetFormatter(&log.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the warning severity or above.
+	log.SetLevel(log.InfoLevel)
+
 }
