@@ -7,7 +7,7 @@ Ethereum tx sender
 - build txsender
 
 ```sh
-$ go get github.com/wuxiangzhou2010/txsender
+go get github.com/wuxiangzhou2010/txsender
 ```
 
 - prepare keystore
@@ -43,8 +43,8 @@ default configuration
 
 - send txs
 
-```
-$ txsender
+```sh
+txsender
 ```
 
 reference:
